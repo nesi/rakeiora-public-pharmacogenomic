@@ -1,9 +1,9 @@
-# Rakeiora Primary Care
+# Rakeiora Primary Care / pharmacogenomic
 
 [Rakeiora](http://rakeiora.ac.nz)
 
 ---
-Primary Care public workflow
+Primary Care public workflow aka pharmacogenomic
 
 ---
 
