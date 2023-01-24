@@ -1,0 +1,28 @@
+# ALLELES must be uniform in the gene portion, and the
+# appropriate/corresponding files must be present in the pharmvar data.
+# The bedfile you give to the workflow should match the gene range
+# for the gene you specify here. This bedfile can be determined at
+#     https://test.data.nesi.org.nz/app/sandbox/gene.xsql
+# Be sure to tick the "drop chr" option.
+ALLELES       : ["CYP2C19*2", "CYP2C19*3","CYP2C19*17"]
+
+# DRUGS should be in the "drug(s)" column of pharmgkb file (below)
+DRUGS         : ["clopidogrel", "warfarin"]
+
+# /logs and /results will be copied to jupyter hub
+outdir        : "results/"
+logdir        : "logs/"
+
+resourcedir   : "resources/"
+singdir       : "/shared/singularities/"
+
+pharmgkb      : "/shared/reference/PharmGKB/PharmGKB_Annotations_Drug-Haplotype.tsv"
+pharmvar      : "/shared/reference/PharmVar/pharmvar-5.1.15"
+idlistfile    : "idlist.tsv"
+druglistfile  : "Drug_List.tsv"
+RSingularity  : "R_tidyverse.sif"
+BCFSingularity: "bcftools_v1.16.sif"
+
+# inputvcffile should be the filename defined in the workflow input in Rakeiora.
+# Rakeiora will create this multi-sample vcf.gz file from your selections.
+inputvcffile  : "input.vcf.gz"
