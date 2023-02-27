@@ -1,0 +1,15 @@
+If this file is present, the gatherAlea utility will be
+executed, and clinical data for all participants associated
+with the samples selected in the workflow execution will
+be requested and placed in the ./alea directory (which
+will be created if it doesn't exist).
+
+Rakeiora administrators can configure Rakeiora to
+retain the raw responses from the alea endpoint in
+this alea directory, and also to copy the contents
+of this alea directory at the end of workflow execution
+to your jupyterhub so you can see these results.
+
+Once real data is online, however, this should
+be disabled as this clinical data should not leave
+the walled garden network.
