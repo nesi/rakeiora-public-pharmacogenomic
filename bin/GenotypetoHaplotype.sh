@@ -18,7 +18,7 @@ cd ${wkdir}
 ###  Code  ###
 genotype=${outdir}/${allele}_Genotype.tsv
 
-echo -e "Sample\tHaplotype\tGenotype" > ${outdir}/${allele}_Haplotype.tsv
+echo -e "ID\tHaplotype\tGenotype" > ${outdir}/${allele}_Haplotype.tsv
 head -n1 ${genotype} | cut -f 3- | tr '\t' '\n' | while read gt
 do
     id=${gt}
@@ -26,4 +26,4 @@ do
     echo -e "${id}\t${allele}\t${geno}" >> ${outdir}/${allele}_Haplotype.tsv
 done
 
-exit
+exit 0
