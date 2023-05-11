@@ -44,38 +44,66 @@ groups <- c("Prescribed","Dispensed")
 prefixes <- c("pres","disp")
 
 for(group in groups) { 
+	
 	prefix <- prefixes[which(groups==group)]
+	if(file.size(get(paste0(prefix,"file"))) != 0L){
+		### Format Participant Drug Data
+		drugs <- read.table(get(paste0(prefix,"file")), header = FALSE, sep=",", colClasses=rep("character" ,2), stringsAsFactors = FALSE) %>% unique() %>% `colnames<-`(c("ID","Drug"))
+		#drugs <- drugs %>% separate_rows(., Drug, convert = TRUE, sep = ";") %>% separate_rows(., Drug, convert = TRUE, sep = " with ") %>% unique() #separate out ; delimitated (prescribed) or ' with ' delimitated (dispensed) entries onto separate lines
+		drugs$Drug <- drugs$Drug %>% trimws(which = "both") %>% tolower() #%>% gsub(" .*", "", .) #convert to lowercase and removal all but the first word #gsub("([A-Za-z]+).*", "\\1" ,.)
+		drugs$ID <- toupper(drugs$ID) #genotype data has uppercase [A-Z], so converted here for consistency
+		
+		### Format Participant Haplotype Data
+		Haplotypes <- read.table(paste0(outdir,allele,"_Haplotype.tsv"), header = T,sep="\t")
+		Haplotypes$Genotype %>% gsub(0,"Homozygous-Reference",.) %>% gsub(1,"Heterozygous",.) %>% gsub(2,"Homozygous-Alternative",.) %>% factor(.,levels=c("Homozygous-Reference","Heterozygous","Homozygous-Alternative")) -> Haplotypes$Genotype_Written
+		Haplotypes$ID <- toupper(Haplotypes$ID) #converted here for consistency
+		
+		### Merge Participant Drug and Haplotype Data
+		Sample_Index <- left_join(Haplotypes,drugs)
+		write.table(Sample_Index, file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,".tsv"),sep="\t",row.names=F)
+		
+		### Format PharmGKB Annotation Data
+		HaplotypeAnnotations <- read.delim(paste0(outdir,allele,"_Haplotype_PharmGKBAnnotation.tsv"), header = T,sep="\t",quote="") %>% `colnames<-`(c("VariantAnnotationID","AnnotationHaplotype","Gene","Drug","PMID","Phenotype","Significance","Notes","Sentence","Alleles","Population"))
+		HaplotypeAnnotations <- HaplotypeAnnotations %>% separate_rows(., Drug, convert = TRUE, sep = ",\"") %>% unique() #separate out , delimitated entries onto separate lines
+		HaplotypeAnnotations$Drug <- HaplotypeAnnotations$Drug %>% trimws(which = "both") %>% as.character() %>% gsub("\\\"","",. ) %>% gsub(" .*", "", .) %>% tolower() #convert to lowercase, remove forward slahes, and removal all but the first word
+	
+		HaplotypeAnnotations %>% filter(Drug == drug) -> HaplotypeAnnotations_Filter
+		write.table(HaplotypeAnnotations_Filter, file = paste0(outdir,allele,"_Haplotype_PharmGKBAnnotation_",drug,".tsv"),sep="\t",row.names=F)
+	
+		### Merged Participant Data Filtering
+		Sample_Index %>% filter(Drug == drug) -> Sample_Index_HapDrug_Filter
+		
+		left_join(Sample_Index_HapDrug_Filter,HaplotypeAnnotations_Filter,by="Drug") -> Sample_Index_HapDrug_Annotations
+		write.table(Sample_Index_HapDrug_Annotations, file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,"_",drug,".tsv"),sep="\t",row.names=F)
+	} else {
+		drugs <- data.frame(matrix(ncol = 2, nrow = 0)) %>% `colnames<-`(c("ID","Drug"))	
+		
+		### Format Participant Haplotype Data
+		Haplotypes <- read.table(paste0(outdir,allele,"_Haplotype.tsv"), header = T,sep="\t")
+		Haplotypes$Genotype %>% gsub(0,"Homozygous-Reference",.) %>% gsub(1,"Heterozygous",.) %>% gsub(2,"Homozygous-Alternative",.) %>% factor(.,levels=c("Homozygous-Reference","Heterozygous","Homozygous-Alternative")) -> Haplotypes$Genotype_Written
+		Haplotypes$ID <- toupper(Haplotypes$ID) #converted here for consistency
 
-	### Format Participant Drug Data
-	drugs <- read.table(get(paste0(prefix,"file")), header = FALSE, sep=",", colClasses=rep("character" ,2), stringsAsFactors = FALSE) %>% unique() %>% `colnames<-`(c("ID","Drug"))
-	#drugs <- drugs %>% separate_rows(., Drug, convert = TRUE, sep = ";") %>% separate_rows(., Drug, convert = TRUE, sep = " with ") %>% unique() #separate out ; delimitated (prescribed) or ' with ' delimitated (dispensed) entries onto separate lines
-	drugs$Drug <- drugs$Drug %>% trimws(which = "both") %>% tolower() #%>% gsub(" .*", "", .) #convert to lowercase and removal all but the first word #gsub("([A-Za-z]+).*", "\\1" ,.)
-	drugs$ID <- toupper(drugs$ID) #genotype data has uppercase [A-Z], so converted here for consistency
+		### Merge Participant Drug and Haplotype Data
+		Sample_Index <- Haplotypes
+		Sample_Index$Drug <- paste0("NoDrugs",group)
+		write.table(Sample_Index, file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,".tsv"),sep="\t",row.names=F)
+		
+		### Format PharmGKB Annotation Data
+		HaplotypeAnnotations <- read.delim(paste0(outdir,allele,"_Haplotype_PharmGKBAnnotation.tsv"), header = T,sep="\t",quote="") %>% `colnames<-`(c("VariantAnnotationID","AnnotationHaplotype","Gene","Drug","PMID","Phenotype","Significance","Notes","Sentence","Alleles","Population"))
+		HaplotypeAnnotations <- HaplotypeAnnotations %>% separate_rows(., Drug, convert = TRUE, sep = ",\"") %>% unique() #separate out , delimitated entries onto separate lines
+		HaplotypeAnnotations$Drug <- HaplotypeAnnotations$Drug %>% trimws(which = "both") %>% as.character() %>% gsub("\\\"","",. ) %>% gsub(" .*", "", .) %>% tolower() #convert to lowercase, remove forward slahes, and removal all but the first word
 	
-	### Format Participant Haplotype Data
-	Haplotypes <- read.table(paste0(outdir,allele,"_Haplotype.tsv"), header = T,sep="\t")
-	Haplotypes$Genotype %>% gsub(0,"Homozygous-Reference",.) %>% gsub(1,"Heterozygous",.) %>% gsub(2,"Homozygous-Alternative",.) %>% factor(.,levels=c("Homozygous-Reference","Heterozygous","Homozygous-Alternative")) -> Haplotypes$Genotype_Written
-	Haplotypes$ID <- toupper(Haplotypes$ID) #converted here for consistency
+		HaplotypeAnnotations %>% filter(Drug == drug) -> HaplotypeAnnotations_Filter
+		write.table(HaplotypeAnnotations_Filter, file = paste0(outdir,allele,"_Haplotype_PharmGKBAnnotation_",drug,".tsv"),sep="\t",row.names=F)
+		
+		### Merged Participant Data Filtering
+		Sample_Index %>% filter(Drug == drug) -> Sample_Index_HapDrug_Filter
+		
+		left_join(Sample_Index_HapDrug_Filter,HaplotypeAnnotations_Filter,by="Drug") -> Sample_Index_HapDrug_Annotations
+		write.table(Sample_Index_HapDrug_Annotations, file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,"_",drug,".tsv"),sep="\t",row.names=F)
+	}
 	
-	### Merge Participant Drug and Haplotype Data
-	Sample_Index <- left_join(Haplotypes,drugs)
-	write.table(Sample_Index, file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,".tsv"),sep="\t",row.names=F)
-	
-	### Format PharmGKB Annotation Data
-	HaplotypeAnnotations <- read.delim(paste0(outdir,allele,"_Haplotype_PharmGKBAnnotation.tsv"), header = T,sep="\t",quote="") %>% `colnames<-`(c("VariantAnnotationID","AnnotationHaplotype","Gene","Drug","PMID","Phenotype","Significance","Notes","Sentence","Alleles","Population"))
-	HaplotypeAnnotations <- HaplotypeAnnotations %>% separate_rows(., Drug, convert = TRUE, sep = ",\"") %>% unique() #separate out , delimitated entries onto separate lines
-	HaplotypeAnnotations$Drug <- HaplotypeAnnotations$Drug %>% trimws(which = "both") %>% as.character() %>% gsub("\\\"","",. ) %>% gsub(" .*", "", .) %>% tolower() #convert to lowercase, remove forward slahes, and removal all but the first word
-
-	HaplotypeAnnotations %>% filter(Drug == drug) -> HaplotypeAnnotations_Filter
-	write.table(HaplotypeAnnotations_Filter, file = paste0(outdir,allele,"_Haplotype_PharmGKBAnnotation_",drug,".tsv"),sep="\t",row.names=F)
-
-	### Merged Participant Data Filtering
-	Sample_Index %>% filter(Drug %in% HaplotypeAnnotations$Drug) -> Sample_Index_HapDrug
-	Sample_Index_HapDrug %>% filter(Drug == drug) -> Sample_Index_HapDrug_Filter
-	
-	left_join(Sample_Index_HapDrug_Filter,HaplotypeAnnotations_Filter,by="Drug") -> Sample_Index_HapDrug_Annotations
-	write.table(Sample_Index_HapDrug_Annotations, file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,"_",drug,".tsv"),sep="\t",row.names=F)
-}
+}	
 
 ####################################################################################################################
 ###                                                    Plot                                                     ####
@@ -84,8 +112,10 @@ for(group in groups) {
 for(group in groups) { 
 	prefix <- prefixes[which(groups==group)]
 
+	Sample_Index <- read.table(file = paste0(outdir,allele,"_Haplotype_Annotation_Summary_",group,".tsv"), header = TRUE, sep="\t", stringsAsFactors = FALSE)
+	
 	Sample_Index %>% select(ID) %>% pull() %>% unique() -> All_ID
-	Sample_Index_HapDrug %>% filter(Drug == drug) %>% select(ID) %>% pull() -> Hit_ID
+	Sample_Index %>% filter(Drug == drug) %>% select(ID) %>% pull() -> Hit_ID
 	setdiff(All_ID,Hit_ID) -> Miss_ID
 	
 	Haplotypes$DrugStatus <- NA

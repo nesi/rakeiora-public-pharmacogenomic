@@ -14,4 +14,4 @@ rm ${outdir}/${allele}_Genotype.tsv
 
 touch ${outdir}/${allele}.done
 
-exit
+exit 0
