@@ -24,12 +24,13 @@ variable should be uniform in the gene portion and the
 appropriate/corresponding files must be present in the pharmvar data.
 
 This bedfile can be determined at
-[Rakeiora test - gene bedefile] (https://test.data.nesi.org.nz/app/sandbox/gene.xsql)
-You will need to tick the "drop chr" option.
+[Rakeiora test - gene bedefile] (https://test.rakeiora.ac.nz/app/sandbox/gene.xsql)
+Depending on your data sources, you may need to tick the "drop chr" option
+(The UCSC reference require the chr, while the Ensemble ones don't).
 
 You can peruse this data from your jupyter hub in the Rakeiora
 test area -
-[Rakeiora test] (https://test.data.nesi.org.nz)
+[Rakeiora test] (https://test.rakeiora.ac.nz)
 
 Rakeiora will retrieve the bedfile specified regions for the
 sample selected and merge them using bcftools into a file
